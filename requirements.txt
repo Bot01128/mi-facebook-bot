@@ -1,0 +1,39 @@
+# --- Core Libraries ---
+python-dotenv
+langchain
+langchain-core
+langchain-community  # <-- Le pedimos explícitamente el paquete que falta
+langchain-text-splitters # <-- Y este, por si acaso
+
+# --- Google Gemini Integration ---
+langchain-google-genai
+
+# --- Vector Database ---
+chromadb
+
+# --- Document Processing & Utilities ---
+pypdf
+langchain-experimental
+Flask
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+gspread
+oauth2client
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+requests
+requests
