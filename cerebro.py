@@ -4,7 +4,7 @@ from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 # --- NUEVAS IMPORTACIONES PARA LA MEMORIA A LARGO PLAZO ---
-from langchain.memory import SQLAlchemyChatMessageHistory
+from langchain_community.chat_message_histories import SQLAlchemyChatMessageHistory
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
