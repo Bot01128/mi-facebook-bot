@@ -5,7 +5,7 @@ from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
-llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
 # --- MEMORIA CONVERSACIONAL GLOBAL ---
 # Esta memoria será compartida por los diferentes "cerebros"
