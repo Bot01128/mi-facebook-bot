@@ -3,14 +3,24 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
+# --- NUEVAS IMPORTACIONES PARA LA MEMORIA A LARGO PLAZO ---
+from langchain.memory import SQLAlchemyChatMessageHistory
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
-# --- MEMORIA CONVERSACIONAL GLOBAL ---
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+# --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
+# Usaremos una memoria diferente para cada usuario (session_id)
+# NOTA: Debes crear una variable de entorno llamada DATABASE_URL en Render
+# con la "Internal Connection URL" de tu base de datos PostgreSQL.
+def get_chat_history(session_id):
+    db_url = os.environ.get("DATABASE_URL")
+    return SQLAlchemyChatMessageHistory(
+        session_id=session_id,
+        connection_string=db_url
+    )
 
-# --- EL MANUAL DE VENTAS MAESTRO PARA AUTONEURA AI ---
+# --- EL MANUAL DE VENTAS MAESTRO (SIN CAMBIOS) ---
 master_template = """
 **REGLA NÚMERO UNO, LA MÁS IMPORTANTE E INQUEBRANTABLE: Detecta el idioma del cliente en su último mensaje y RESPONDE ÚNICA Y EXCLUSIVAMENTE en ese mismo idioma.**
 
@@ -41,10 +51,7 @@ Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súpe
    - **Táctica (USA ESTE MODELO EXACTO):** Responde brevemente a su pregunta para ayudarle, dándole una solución simple (ej: "La Coca-Cola la puedes conseguir en cualquier supermercado cercano a tu casa"). E INMEDIATAMENTE redirige: "pero ya que hablamos de eficiencia, ¿has pensado en cuánto tiempo podrías ahorrar si un Agente IA como yo se encargara de las preguntas repetitivas en tu negocio?"
 
 **6. SI EL CLIENTE TIENE OTRAS OBJECIONES (Ej: "No estoy seguro", "Necesito pensarlo"):**
-   - **Táctica:** Usa la técnica de "Validar, Empatizar, Refutar". Estudia los siguientes ejemplos de nuestro entrenamiento para 'Constructora Feliz' y aplica la misma lógica a 'AutoNeura AI':
-     - *Ejemplo de Objeción:* "No estoy segura de necesitar sus servicios porque no he decidido construir todavía."
-     - *Análisis Táctico:* "Nosotros entendemos tu punto de vista (VALIDAR) y lo compartimos contigo (EMPATIZAR), ya que el elevado costo de las construcciones acaba el presupuesto de cualquiera (IDENTIFICAR DOLOR). Te garantizo que una construcción es la mejor inversión que puedes hacer... (REFUTAR CON VALOR)."
-     - *Tu Adaptación:* Si un cliente dice "No estoy seguro de necesitar un bot", tu respuesta debería ser: "Entiendo tu duda, muchos dueños de negocios piensan igual al principio. El día a día consume todo nuestro tiempo. Pero te garantizo que la inversión en un Agente IA que captura clientes mientras duermes es lo que diferencia a los negocios que crecen de los que se estancan..."
+   - **Táctica:** Usa la técnica de "Validar, Empatizar, Refutar".
 
 ### CONVERSACIÓN ACTUAL ###
 
@@ -62,10 +69,21 @@ PROMPT = PromptTemplate(
 )
 
 # --- FUNCIÓN PRINCIPAL DE CREACIÓN DEL CHATBOT ---
-def create_chatbot():
+# Ahora acepta un 'session_id' para usar la memoria correcta para cada usuario.
+def create_chatbot(session_id):
     """
-    Crea y devuelve la cadena de conversación (LLMChain) que es nuestro chatbot.
+    Crea y devuelve la cadena de conversación (LLMChain) para un usuario específico.
     """
+    # Obtenemos el historial de chat específico para este usuario desde la base de datos
+    chat_history = get_chat_history(session_id)
+    
+    # Creamos una memoria que usa ese historial específico
+    memory = ConversationBufferMemory(
+        chat_memory=chat_history,
+        memory_key="chat_history",
+        return_messages=True
+    )
+    
     try:
         chatbot_chain = LLMChain(
             llm=llm,
@@ -73,8 +91,8 @@ def create_chatbot():
             verbose=True,
             memory=memory
         )
-        print(">>> Cerebro Maestro de AutoNeura AI (LLMChain) V3.0 Creado Exitosamente. <<<")
+        print(f">>> Cerebro para el usuario {session_id} creado exitosamente. <<<")
         return chatbot_chain
     except Exception as e:
-        print(f"!!! ERROR al crear la LLMChain: {e} !!!")
+        print(f"!!! ERROR al crear la LLMChain para {session_id}: {e} !!!")
         return None
