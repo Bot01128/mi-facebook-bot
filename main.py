@@ -8,7 +8,7 @@ from cerebro import create_chatbot # Importamos nuestra función principal del c
 load_dotenv()
 app = Flask(__name__)
 
-# Cargamos los tokens desde los Secrets de Replit
+# Cargamos los tokens desde las Variables de Entorno
 VERIFY_TOKEN = os.environ.get('VERIFY_TOKEN')
 PAGE_ACCESS_TOKEN = os.environ.get('PAGE_ACCESS_TOKEN')
 
@@ -31,15 +31,12 @@ def home():
 def webhook():
     if request.method == 'GET':
         # --- PARTE 1: La Verificación (para conectar con Facebook) ---
-        # Facebook envía un token para verificar que somos nosotros.
         token_sent = request.args.get("hub.verify_token")
         if token_sent == VERIFY_TOKEN:
-            # Si el token es correcto, le devolvemos el "challenge" para confirmar.
             challenge = request.args.get("hub.challenge")
             print("--- VERIFICACIÓN DE WEBHOOK EXITOSA ---")
             return challenge, 200
         else:
-            # Si el token es incorrecto, le decimos que no está autorizado.
             print("--- ERROR: VERIFICACIÓN DE WEBHOOK FALLIDA, TOKEN INVÁLIDO ---")
             return 'Token de verificación inválido', 403
 
@@ -53,17 +50,27 @@ def webhook():
         if data and data.get("object") == "page":
             for entry in data.get("entry", []):
                 for messaging_event in entry.get("messaging", []):
-                    if messaging_event.get("message"):
+                    if messaging_event.get("message") and "text" in messaging_event["message"]:
                         sender_id = messaging_event["sender"]["id"]
                         message_text = messaging_event["message"]["text"]
 
                         print(f"--- Mensaje recibido de {sender_id}: '{message_text}' ---")
 
-                        # ¡Aquí usamos nuestro cerebro para obtener una respuesta!
-                        response_text = final_chain.invoke(message_text)
+                        try:
+                            # ¡AQUÍ ESTÁ LA CORRECCIÓN!
+                            response_object = final_chain.invoke(message_text)
+                            print(f"--- Objeto de respuesta completo: {response_object} ---")
+                            
+                            # Extraemos el texto de la respuesta del diccionario
+                            response_text = response_object.get('text', 'Disculpa, no pude procesar tu solicitud en este momento.')
 
-                        send_message(sender_id, response_text)
-                        print(f"--- Respuesta enviada a {sender_id}: '{response_text}' ---")
+                            send_message(sender_id, response_text)
+                            print(f"--- Respuesta enviada a {sender_id}: '{response_text}' ---")
+                        
+                        except Exception as e:
+                            print(f"!!! ERROR AL PROCESAR EL MENSAJE: {e} !!!")
+                            # Enviamos un mensaje de error genérico al usuario
+                            send_message(sender_id, "Lo siento, estoy teniendo problemas técnicos. Por favor, inténtalo de nuevo más tarde.")
 
         return "OK", 200
 
@@ -83,11 +90,12 @@ def send_message(recipient_id, message_text):
             "text": message_text
         }
     }
-    r = requests.post("https://graph.facebook.com/v19.0/me/messages", params=params, headers=headers, json=data)
-    if r.status_code != 200:
-        print(f"!!! ERROR al enviar mensaje: {r.status_code} {r.text} !!!")
+    try:
+        r = requests.post("https://graph.facebook.com/v19.0/me/messages", params=params, headers=headers, json=data, timeout=10)
+        if r.status_code != 200:
+            print(f"!!! ERROR al enviar mensaje a Facebook API: {r.status_code} {r.text} !!!")
+    except requests.exceptions.RequestException as e:
+        print(f"!!! ERROR de conexión al enviar mensaje: {e} !!!")
 
-# --- ARRANQUE DEL SERVIDOR ---
-if __name__ == "__main__":
-    print("--- INICIANDO SERVIDOR FLASK ---")
-    app.run(host='0.0.0.0', port=8080)
+# --- ARRANQUE DEL SERVIDOR (NO NECESARIO PARA GUNICORN) ---
+# Gunicorn se encarga de esto, por lo que no necesitamos el bloque if __name__ == "__main__":
