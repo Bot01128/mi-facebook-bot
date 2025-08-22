@@ -14,6 +14,7 @@ chromadb
 # --- Document Processing & Utilities ---
 pypdf
 langchain-experimental
+
 Flask
 requests
 requests
@@ -37,3 +38,4 @@ requests
 requests
 requests
 requests
+gunicorn
