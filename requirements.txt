@@ -39,3 +39,5 @@ requests
 requests
 requests
 gunicorn
+psycopg2-binary
+SQLAlchemy
