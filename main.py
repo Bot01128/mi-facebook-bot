@@ -48,8 +48,8 @@ def webhook():
                             # Invocamos la cadena con el nuevo estándar
                             response_text = final_chain.invoke({"question": message_text})
                             
-                            # Actualizamos la memoria manualmente
-                            final_chain.memory.save_context({"question": message_text}, {"output": response_text})
+                            # YA NO ES NECESARIO GUARDAR LA MEMORIA MANUALMENTE
+                            # El nuevo sistema lo hace automáticamente.
                             
                             print(f"--- Respuesta generada: {response_text} ---")
                             send_message(sender_id, response_text)
