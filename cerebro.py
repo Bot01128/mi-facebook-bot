@@ -88,7 +88,7 @@ def create_chatbot(session_id):
         )
         
         # Guardamos la memoria para poder actualizarla después
-        chatbot_chain.memory = memory
+
 
         print(f">>> Cerebro para el usuario {session_id} creado exitosamente con el nuevo estándar. <<<")
         return chatbot_chain
