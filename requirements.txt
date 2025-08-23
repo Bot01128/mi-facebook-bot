@@ -13,3 +13,4 @@ langchain-postgres
 # El "traductor" moderno para Postgres
 psycopg
 tavily-python
+psycopg2-binary
