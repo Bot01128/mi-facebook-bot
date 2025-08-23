@@ -1,25 +1,19 @@
 # --- Core Libraries ---
 python-dotenv
-langchain==0.1.13
-langchain-core
-langchain-community==0.0.29
-langchain-text-splitters
-gunicorn
-
-# --- Google Gemini Integration ---
+langchain
+langchain-community
 langchain-google-genai
+gunicorn
+psycopg2-binary
+SQLAlchemy
 
 # --- Vector Database ---
 chromadb
 
 # --- Document Processing & Utilities ---
-pypdf
+pdf
 langchain-experimental
 Flask
 requests
 gspread
 oauth2client
-
-# --- Database Connection ---
-SQLAlchemy
-psycopg2-binary
