@@ -11,6 +11,9 @@ app = Flask(__name__)
 VERIFY_TOKEN = os.environ.get('VERIFY_TOKEN')
 PAGE_ACCESS_TOKEN = os.environ.get('PAGE_ACCESS_TOKEN')
 
+# Creamos una única instancia de nuestro bot cuando el servidor arranca.
+final_chain = create_chatbot()
+
 # --- RUTA PRINCIPAL ---
 @app.route('/')
 def home():
@@ -27,6 +30,10 @@ def webhook():
         return 'Token de verificación inválido', 403
 
     elif request.method == 'POST':
+        if final_chain is None:
+            print("!!! ERROR: El chatbot no está inicializado.")
+            return "OK", 200
+
         data = request.get_json()
         if data and data.get("object") == "page":
             for entry in data.get("entry", []):
@@ -35,29 +42,20 @@ def webhook():
                         sender_id = messaging_event["sender"]["id"]
                         message_text = messaging_event["message"]["text"]
                         
-                        final_chain = create_chatbot(session_id=sender_id)
-
-                        if final_chain is None:
-                            print(f"!!! ERROR: No se pudo crear el cerebro para {sender_id}.")
-                            continue
-
                         print(f"--- Mensaje recibido de {sender_id}: '{message_text}' ---")
 
                         try:
-                            # Invocamos la cadena con el nuevo estándar
-                            response_text = final_chain.invoke({"question": message_text})
+                            # Usamos el cerebro único que funciona
+                            response_object = final_chain.invoke(message_text)
+                            response_text = response_object.get('text', 'Disculpa, no pude procesar tu solicitud.')
                             
-                            # Actualizamos la memoria manualmente
-                            final_chain.memory.save_context({"question": message_text}, {"output": response_text})
-
-                            print(f"--- Respuesta generada: {response_text} ---")
+                            print(f"--- Objeto de respuesta completo: {response_object} ---")
                             send_message(sender_id, response_text)
                             print(f"--- Respuesta enviada a {sender_id} ---")
                         
                         except Exception as e:
                             print(f"!!! ERROR AL PROCESAR EL MENSAJE: {e} !!!")
-                            send_message(sender_id, "Lo siento, estoy teniendo problemas técnicos. Por favor, inténtalo de nuevo más tarde.")
-
+                            send_message(sender_id, "Lo siento, estoy teniendo problemas técnicos.")
         return "OK", 200
 
 # --- FUNCIÓN PARA ENVIAR MENSAJES ---
