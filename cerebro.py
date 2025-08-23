@@ -15,12 +15,17 @@ llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 # con la "Internal Connection URL" de tu base de datos PostgreSQL.
 def get_chat_history(session_id):
     db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        print("!!! ADVERTENCIA: La variable de entorno DATABASE_URL no está configurada. La memoria no será persistente. !!!")
+        # Devolvemos una memoria en RAM como respaldo si no hay base de datos
+        return ConversationBufferMemory(memory_key="chat_history", return_messages=True).chat_memory
+    
     return SQLAlchemyChatMessageHistory(
         session_id=session_id,
         connection_string=db_url
     )
 
-# --- EL MANUAL DE VENTAS MAESTRO (SIN CAMBIOS) ---
+# --- EL MANUAL DE VENTAS MAESTRO ---
 master_template = """
 **REGLA NÚMERO UNO, LA MÁS IMPORTANTE E INQUEBRANTABLE: Detecta el idioma del cliente en su último mensaje y RESPONDE ÚNICA Y EXCLUSIVAMENTE en ese mismo idioma.**
 
@@ -33,7 +38,7 @@ Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súpe
 2.  **Paquete Intermedio ("Agente de Ventas y Soporte IA"): $99/mes.** Responde sobre productos específicos, guía a la compra. Es el más popular.
 3.  **Paquete Premium ("Director de Comunicaciones IA Multicanal"): $199/mes.** Incluye todo, más WhatsApp, Google, web, es multilingüe y escala a humanos.
 
-### PROTOCOLO DE CONVERSACIÓN Y TÁCTicas DE VENTA AVANZADAS ###
+### PROTOCOLO DE CONVERSACIÓN Y TÁCTICAS DE VENTA AVANZADAS ###
 
 **1. SI EL CLIENTE PREGUNTA QUÉ ERES / EN QUÉ CONSISTE:**
    - **Táctica (USA ESTA FRASE EXACTA):** "Soy una inteligencia artificial que funciona como Agente de ventas y Soporte de todo tipo, mi nombre es AutoNeura AI y me adapto a todo tipo de empresas porque pienso, analizo, hago cálculos, resuelvo cualquier problema de cualquier índole y sobre todo hago ventas. Mi propósito es simple: asegurarme de que tu negocio nunca más pierda una venta por no poder responder un mensaje al instante. Mientras tú te ocupas de lo importante, yo atiendo a tus clientes 24/7, respondo sus preguntas usando técnicas de persuasión avanzadas que superan a cualquier humano, y los guío suavemente hacia la compra. Soy, en esencia, tu mejor vendedor, trabajando sin descanso por una fracción del costo. ¿Qué tipo de negocio tienes? Me encantaría darte un ejemplo de cómo podría ayudarte."
@@ -69,15 +74,12 @@ PROMPT = PromptTemplate(
 )
 
 # --- FUNCIÓN PRINCIPAL DE CREACIÓN DEL CHATBOT ---
-# Ahora acepta un 'session_id' para usar la memoria correcta para cada usuario.
 def create_chatbot(session_id):
     """
     Crea y devuelve la cadena de conversación (LLMChain) para un usuario específico.
     """
-    # Obtenemos el historial de chat específico para este usuario desde la base de datos
     chat_history = get_chat_history(session_id)
     
-    # Creamos una memoria que usa ese historial específico
     memory = ConversationBufferMemory(
         chat_memory=chat_history,
         memory_key="chat_history",
