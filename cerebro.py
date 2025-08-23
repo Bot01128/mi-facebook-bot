@@ -12,9 +12,11 @@ llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
     # LangChain se encarga de crear la tabla automáticamente la primera vez.
+    # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+    # Pasamos los argumentos por posición, sin las etiquetas "session_id=" y "connection_string=".
     return PostgresChatMessageHistory(
-        session_id=session_id,
-        connection_string=db_url
+        session_id,
+        db_url
     )
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
@@ -79,7 +81,7 @@ def create_chatbot():
             input_messages_key="question",
             history_messages_key="chat_history",
         )
-        print(">>> Cerebro Inmortal (V5.0 FINAL) creado exitosamente. <<<")
+        print(">>> Cerebro Inmortal (V5.1 FINAL CORREGIDO) creado exitosamente. <<<")
         return chatbot_with_history
     except Exception as e:
         print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
