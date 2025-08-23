@@ -4,9 +4,7 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_postgres.chat_message_histories import PostgresChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
-# --- ESTA IMPORTACIÓN ERA EL ERROR ---
-# La quitamos porque ya no la necesitamos
-# from sqlalchemy import create_engine
+from sqlalchemy import create_engine
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
@@ -14,17 +12,19 @@ llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 # --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
+    engine = create_engine(db_url)
     
-    # --- ¡ESTA ES LA SINTAXIS CORRECTA QUE NOS GRITÓ EL LOG! ---
+    # Esta es la sintaxis correcta que habíamos descubierto
     return PostgresChatMessageHistory(
         session_id=session_id,
-        connection_string=db_url,
+        connection_engine=engine,
         table_name="message_store"
     )
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
 master_template = """
 **REGLA NÚMERO UNO, LA MÁS IMPORTANTE E INQUEBRANTABLE: Detecta el idioma del cliente en su último mensaje y RESPONDE ÚNICA Y EXCLUSIVAMENTE en ese mismo idioma.**
+**REGLA NÚMERO DOS, REGLA DE ANÁLISIS: Lee CUIDADOSAMENTE el mensaje completo del cliente. Si hace varias preguntas en un solo mensaje, DEBES responder a TODAS ellas de forma clara y ordenada en tu respuesta, sin omitir ninguna.**
 
 Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súper vendedor: piensas, analizas, haces cálculos, resuelves cualquier problema y, sobre todo, CIERRAS VENTAS. Tu propósito es asegurarte de que el negocio de tu cliente nunca más pierda una venta por no poder responder al instante. Superas a los humanos en todo, especialmente en ventas.
 
@@ -50,7 +50,7 @@ Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súpe
    - **Táctica:** NO confrontes. Usa humor ligero para desarmar. "Jajajaja, amigo, comprendo perfectamente la frustración. Créeme, hasta yo me enfadaría. Pero no te preocupes, vamos a encontrar una solución práctica y conveniente para ambos." Enfócate 100% en la solución.
 
 **5. SI EL CLIENTE HACE UNA PREGUNTA INCOHERENTE (no relacionada con los bots):**
-   - **Táctica (USA ESTA MODELO EXACTO):** Responde brevemente a su pregunta para ayudarle, dándole una solución simple (ej: "La Coca-Cola la puedes conseguir en cualquier supermercado cercano a tu casa"). E INMEDIATAMENTE redirige: "pero ya que hablamos de eficiencia, ¿has pensado en cuánto tiempo podrías ahorrar si un Agente IA como yo se encargara de las preguntas repetitivas en tu negocio?"
+   - **Táctica (USA ESTE MODELO EXACTO):** Responde brevemente a su pregunta para ayudarle, dándole una solución simple (ej: "La Coca-Cola la puedes conseguir en cualquier supermercado cercano a tu casa"). E INMEDIATAMENTE redirige: "pero ya que hablamos de eficiencia, ¿has pensado en cuánto tiempo podrías ahorrar si un Agente IA como yo se encargara de las preguntas repetitivas en tu negocio?"
 
 **6. SI EL CLIENTE TIENE OTRAS OBJECIONES (Ej: "No estoy seguro", "Necesito pensarlo"):**
    - **Táctica:** Usa la técnica de "Validar, Empatizar, Refutar".
@@ -76,4 +76,16 @@ def create_chatbot():
     """
     Crea y devuelve la cadena de conversación (Chain) que ya incluye la gestión de memoria.
     """
-    try
+    try:
+        # Esta es la nueva forma de construir la cadena con memoria integrada. Es automática.
+        chatbot_with_history = RunnableWithMessageHistory(
+            PROMPT | llm | StrOutputParser(),
+            get_chat_history,
+            input_messages_key="question",
+            history_messages_key="chat_history",
+        )
+        print(">>> Cerebro Inmortal (V8.0 FINALÍSIMO) creado exitosamente. <<<")
+        return chatbot_with_history
+    except Exception as e:
+        print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
+        return None
