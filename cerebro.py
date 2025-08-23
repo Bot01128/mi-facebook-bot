@@ -1,7 +1,6 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
-# La importación de ConversationBufferMemory ya no es necesaria aquí.
 from langchain_community.chat_message_histories import PostgresChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
@@ -10,15 +9,14 @@ from langchain_core.output_parsers import StrOutputParser
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
 # --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
+# Esta función simplemente devuelve un objeto que sabe cómo hablar con la tabla
+# de historial de un usuario específico. LangChain se encarga de crear la tabla.
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    history = PostgresChatMessageHistory(
+    return PostgresChatMessageHistory(
         session_id=session_id,
         connection_string=db_url
     )
-    # Esta línea crea la tabla de historial automáticamente la primera vez que un usuario habla.
-    history.create_tables()
-    return history
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
 master_template = """
@@ -75,15 +73,15 @@ def create_chatbot():
     Crea y devuelve la cadena de conversación (Chain) que ya incluye la gestión de memoria.
     """
     try:
-        # Esta es la nueva forma de construir la cadena con memoria integrada
-        chatbot_chain_with_history = RunnableWithMessageHistory(
+        # Esta es la nueva forma de construir la cadena con memoria integrada. Es automática.
+        chatbot_with_history = RunnableWithMessageHistory(
             PROMPT | llm | StrOutputParser(),
             get_chat_history,
             input_messages_key="question",
             history_messages_key="chat_history",
         )
-        print(">>> Cerebro con memoria persistente (V4.0) creado exitosamente. <<<")
-        return chatbot_chain_with_history
+        print(">>> Cerebro con memoria persistente (V4.1 - CORREGIDO) creado exitosamente. <<<")
+        return chatbot_with_history
     except Exception as e:
         print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
         return None
