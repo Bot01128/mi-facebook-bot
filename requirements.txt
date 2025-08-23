@@ -1,8 +1,8 @@
 # --- Core Libraries ---
 python-dotenv
-langchain
+langchain==0.1.13
 langchain-core
-langchain-community  # <-- Le pedimos explícitamente el paquete que falta
+langchain-community==0.0.29  # <-- Le pedimos explícitamente el paquete que falta
 langchain-text-splitters # <-- Y este, por si acaso
 
 # --- Google Gemini Integration ---
@@ -42,3 +42,4 @@ gunicorn
 psycopg2-binary
 SQLAlchemy
 langchain-postgres
+
