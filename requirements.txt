@@ -4,14 +4,6 @@ langchain
 langchain-community
 langchain-google-genai
 gunicorn
-
-# --- Vector Database ---
-chromadb
-
-# --- Document Processing & Utilities ---
-pypdf
-langchain-experimental
-Flask
-requests
-gspread
-oauth2client
+psycopg2-binary
+SQLAlchemy
+langchain-postgres
