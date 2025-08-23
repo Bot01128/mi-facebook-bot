@@ -19,3 +19,4 @@ oauth2client
 # --- Database Connection ---
 SQLAlchemy
 psycopg2-binary
+psycopg
