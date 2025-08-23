@@ -18,11 +18,11 @@ def get_chat_history(session_id: str):
     # 1. Creamos el "motor" de conexión.
     engine = create_engine(db_url)
     
-    # 2. Le pasamos el motor directamente.
+    # 2. Le pasamos los argumentos por posición, sin etiquetas.
     return PostgresChatMessageHistory(
-        session_id=session_id,
-        sync_connection=engine,
-        table_name="message_store" # Le damos un nombre a nuestra tabla de memoria
+        "message_store", # Nombre de la tabla
+        session_id,      # ID de la sesión
+        engine           # Conexión
     )
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
@@ -87,7 +87,7 @@ def create_chatbot():
             input_messages_key="question",
             history_messages_key="chat_history",
         )
-        print(">>> Cerebro Inmortal (V6.0 FINAL CORREGIDO) creado exitosamente. <<<")
+        print(">>> Cerebro Inmortal (V6.1 FINAL CORREGIDO) creado exitosamente. <<<")
         return chatbot_with_history
     except Exception as e:
         print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
