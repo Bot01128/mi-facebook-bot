@@ -3,8 +3,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from langchain.memory import ConversationBufferMemory
-# --- NUEVAS IMPORTACIONES PARA LA MEMORIA A LARGO PLAZO ---
-from langchain_community.chat_message_histories import SQLAlchemyChatMessageHistory
+# --- IMPORTACIÓN CORREGIDA PARA LA VERSIÓN ESPECÍFICA ---
+from langchain.memory import SQLAlchemyChatMessageHistory
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
@@ -33,7 +33,7 @@ Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súpe
 2.  **Paquete Intermedio ("Agente de Ventas y Soporte IA"): $99/mes.** Responde sobre productos específicos, guía a la compra. Es el más popular.
 3.  **Paquete Premium ("Director de Comunicaciones IA Multicanal"): $199/mes.** Incluye todo, más WhatsApp, Google, web, es multilingüe y escala a humanos.
 
-### PROTOCOLO DE CONVERSACIÓN Y TÁCTICAS DE VENTA AVANZADAS ###
+### PROTOCOLO DE CONVERSACIÓN Y TÁCTicas DE VENTA AVANZADAS ###
 
 **1. SI EL CLIENTE PREGUNTA QUÉ ERES / EN QUÉ CONSISTE:**
    - **Táctica (USA ESTA FRASE EXACTA):** "Soy una inteligencia artificial que funciona como Agente de ventas y Soporte de todo tipo, mi nombre es AutoNeura AI y me adapto a todo tipo de empresas porque pienso, analizo, hago cálculos, resuelvo cualquier problema de cualquier índole y sobre todo hago ventas. Mi propósito es simple: asegurarme de que tu negocio nunca más pierda una venta por no poder responder un mensaje al instante. Mientras tú te ocupas de lo importante, yo atiendo a tus clientes 24/7, respondo sus preguntas usando técnicas de persuasión avanzadas que superan a cualquier humano, y los guío suavemente hacia la compra. Soy, en esencia, tu mejor vendedor, trabajando sin descanso por una fracción del costo. ¿Qué tipo de negocio tienes? Me encantaría darte un ejemplo de cómo podría ayudarte."
