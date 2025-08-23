@@ -4,6 +4,8 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_postgres.chat_message_histories import PostgresChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
+# --- NUEVA IMPORTACIÓN NECESARIA ---
+from sqlalchemy import create_engine
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
@@ -11,12 +13,16 @@ llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 # --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    # LangChain se encarga de crear la tabla automáticamente la primera vez.
+    
     # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
-    # Pasamos los argumentos por posición, sin las etiquetas "session_id=" y "connection_string=".
+    # 1. Creamos el "motor" de conexión.
+    engine = create_engine(db_url)
+    
+    # 2. Le pasamos el motor directamente.
     return PostgresChatMessageHistory(
-        session_id,
-        db_url
+        session_id=session_id,
+        sync_connection=engine,
+        table_name="message_store" # Le damos un nombre a nuestra tabla de memoria
     )
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
@@ -81,7 +87,7 @@ def create_chatbot():
             input_messages_key="question",
             history_messages_key="chat_history",
         )
-        print(">>> Cerebro Inmortal (V5.1 FINAL CORREGIDO) creado exitosamente. <<<")
+        print(">>> Cerebro Inmortal (V6.0 FINAL CORREGIDO) creado exitosamente. <<<")
         return chatbot_with_history
     except Exception as e:
         print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
