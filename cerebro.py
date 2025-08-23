@@ -1,21 +1,24 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import ChatPromptTemplate
-from langchain.memory import ConversationBufferMemory
+# La importación de ConversationBufferMemory ya no es necesaria aquí.
 from langchain_community.chat_message_histories import PostgresChatMessageHistory
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
 # --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
-def get_chat_history(session_id):
+def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    return PostgresChatMessageHistory(
+    history = PostgresChatMessageHistory(
         session_id=session_id,
         connection_string=db_url
     )
+    # Esta línea crea la tabla de historial automáticamente la primera vez que un usuario habla.
+    history.create_tables()
+    return history
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
 master_template = """
@@ -60,38 +63,27 @@ Historial de la conversación:
 Tu Respuesta (OBLIGATORIAMENTE en el mismo idioma del cliente y siguiendo los protocolos exactos):
 """
 
-PROMPT = ChatPromptTemplate.from_template(master_template)
+PROMPT = ChatPromptTemplate.from_messages([
+    ("system", master_template),
+    ("placeholder", "{chat_history}"),
+    ("human", "{question}"),
+])
 
 # --- FUNCIÓN PRINCIPAL DE CREACIÓN DEL CHATBOT ---
-def create_chatbot(session_id):
+def create_chatbot():
     """
-    Crea y devuelve la cadena de conversación para un usuario específico.
+    Crea y devuelve la cadena de conversación (Chain) que ya incluye la gestión de memoria.
     """
-    chat_history = get_chat_history(session_id)
-    
-    memory = ConversationBufferMemory(
-        chat_memory=chat_history,
-        memory_key="chat_history",
-        return_messages=True,
-        input_key="question"
-    )
-    
     try:
-        # Usamos el nuevo estándar de LangChain (LCEL)
-        chatbot_chain = (
-            RunnablePassthrough.assign(
-                chat_history=lambda x: memory.load_memory_variables(x)["chat_history"]
-            )
-            | PROMPT
-            | llm
-            | StrOutputParser()
+        # Esta es la nueva forma de construir la cadena con memoria integrada
+        chatbot_chain_with_history = RunnableWithMessageHistory(
+            PROMPT | llm | StrOutputParser(),
+            get_chat_history,
+            input_messages_key="question",
+            history_messages_key="chat_history",
         )
-        
-        # Guardamos la memoria para poder actualizarla después
-
-
-        print(f">>> Cerebro para el usuario {session_id} creado exitosamente con el nuevo estándar. <<<")
-        return chatbot_chain
+        print(">>> Cerebro con memoria persistente (V4.0) creado exitosamente. <<<")
+        return chatbot_chain_with_history
     except Exception as e:
-        print(f"!!! ERROR al crear la cadena de conversación para {session_id}: {e} !!!")
+        print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
         return None
