@@ -41,3 +41,4 @@ requests
 gunicorn
 psycopg2-binary
 SQLAlchemy
+langchain-postgres
