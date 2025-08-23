@@ -15,4 +15,9 @@ chromadb
 # --- Document Processing & Utilities ---
 pypdf
 langchain-experimental
+
+# --- Nuevas Herramientas ---
+langchain-postgres
+psycopg
 tavily-python
+SQLAlchemy
