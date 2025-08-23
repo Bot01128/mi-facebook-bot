@@ -1,3 +1,4 @@
+# --- Core Libraries ---
 python-dotenv
 langchain
 langchain-community
@@ -7,10 +8,11 @@ Flask
 requests
 gspread
 oauth2client
-SQLAlchemy
-# La nueva librería oficial para Postgres
-langchain-postgres
-# El "traductor" moderno para Postgres
-psycopg
+
+# --- Vector Database ---
+chromadb
+
+# --- Document Processing & Utilities ---
+pypdf
+langchain-experimental
 tavily-python
-psycopg2-binary
