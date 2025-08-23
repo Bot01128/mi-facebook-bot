@@ -2,8 +2,9 @@
 python-dotenv
 langchain==0.1.13
 langchain-core
-langchain-community==0.0.29  # <-- Le pedimos explícitamente el paquete que falta
-langchain-text-splitters # <-- Y este, por si acaso
+langchain-community==0.0.29
+langchain-text-splitters
+gunicorn
 
 # --- Google Gemini Integration ---
 langchain-google-genai
@@ -14,32 +15,11 @@ chromadb
 # --- Document Processing & Utilities ---
 pypdf
 langchain-experimental
-
 Flask
-requests
-requests
-requests
-requests
-requests
-requests
-requests
 requests
 gspread
 oauth2client
-requests
-requests
-requests
-requests
-requests
-requests
-requests
-requests
-requests
-requests
-requests
-requests
-gunicorn
-psycopg2-binary
-SQLAlchemy
-langchain-postgres
 
+# --- Database Connection ---
+SQLAlchemy
+psycopg2-binary
