@@ -4,23 +4,27 @@ from flask import Flask, request
 from dotenv import load_dotenv
 from cerebro import create_chatbot
 
+# --- CONFIGURACIÓN INICIAL ---
 load_dotenv()
 app = Flask(__name__)
+
 VERIFY_TOKEN = os.environ.get('VERIFY_TOKEN')
 PAGE_ACCESS_TOKEN = os.environ.get('PAGE_ACCESS_TOKEN')
-final_chain = create_chatbot()
 
+# --- RUTA PRINCIPAL ---
 @app.route('/')
 def home():
-    return "<h1>Servidor del Chatbot funcionando</h1>", 200
+    return "<h1>El servidor del Chatbot está funcionando</h1><p>¡Listo para conectar con Facebook!</p>", 200
 
+# --- RUTA WEBHOOK ---
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'GET':
         token_sent = request.args.get("hub.verify_token")
         if token_sent == VERIFY_TOKEN:
-            return request.args.get("hub.challenge"), 200
-        return 'Token inválido', 403
+            challenge = request.args.get("hub.challenge")
+            return challenge, 200
+        return 'Token de verificación inválido', 403
 
     elif request.method == 'POST':
         data = request.get_json()
@@ -31,29 +35,38 @@ def webhook():
                         sender_id = messaging_event["sender"]["id"]
                         message_text = messaging_event["message"]["text"]
                         
+                        # Creamos o recuperamos un cerebro específico para este usuario
+                        final_chain = create_chatbot(session_id=sender_id)
+
                         if final_chain is None:
-                            print("!!! ERROR CRÍTICO: El cerebro no se pudo inicializar.")
-                            send_message(sender_id, "Lo siento, tengo un problema grave.")
+                            print(f"!!! ERROR: No se pudo crear el cerebro para {sender_id}.")
                             continue
 
                         print(f"--- Mensaje recibido de {sender_id}: '{message_text}' ---")
+
                         try:
-                            response_text = final_chain.invoke(
-                                {"question": message_text},
-                                config={"configurable": {"session_id": sender_id}}
-                            )
-                            print(f"--- Respuesta generada: {response_text} ---")
+                            # Invocamos el cerebro. Como es LLMChain, espera un string o un diccionario simple.
+                            # La memoria se maneja automáticamente dentro de la cadena.
+                            response_object = final_chain.invoke(message_text)
+                            response_text = response_object.get('text', 'Disculpa, hubo un problema al generar la respuesta.')
+                            
+                            print(f"--- Objeto de respuesta completo: {response_object} ---")
                             send_message(sender_id, response_text)
                             print(f"--- Respuesta enviada a {sender_id} ---")
+                        
                         except Exception as e:
                             print(f"!!! ERROR AL PROCESAR EL MENSAJE: {e} !!!")
-                            send_message(sender_id, "Lo siento, problemas técnicos.")
+                            send_message(sender_id, "Lo siento, estoy teniendo problemas técnicos.")
         return "OK", 200
 
+# --- FUNCIÓN PARA ENVIAR MENSAJES ---
 def send_message(recipient_id, message_text):
     params = {"access_token": PAGE_ACCESS_TOKEN}
     headers = {"Content-Type": "application/json"}
-    data = {"recipient": {"id": recipient_id}, "message": {"text": message_text}}
+    data = {
+        "recipient": {"id": recipient_id},
+        "message": {"text": message_text}
+    }
     try:
         r = requests.post("https://graph.facebook.com/v19.0/me/messages", params=params, headers=headers, json=data, timeout=10)
         if r.status_code != 200:
