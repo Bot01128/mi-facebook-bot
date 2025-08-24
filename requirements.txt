@@ -1,24 +1,3 @@
-# --- Core Libraries ---
-python-dotenv
-langchain
-langchain-community
-langchain-google-genai
-gunicorn
-Flask
-
-# --- Vector Database ---
-chromadb
-
-# --- Document Processing & Utilities ---
-pypdf
-langchain-experimental
-requests
-gspread
-oauth2client
-
-# --- Database Connection ---
-SQLAlchemy
-psycopg2-binary
-psycopg
 Flask==2.3.3
 gunicorn==21.2.0
+
