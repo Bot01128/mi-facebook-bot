@@ -11,4 +11,5 @@ tavily-python==0.3.3
 gspread==6.0.2
 google-api-python-client==2.137.0
 google-auth-httplib2==0.2.0
-google-auth-oauthlib==1.2.0s
+google-auth-oauthlib==1.2.0
+
