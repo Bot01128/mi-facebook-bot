@@ -1,23 +1,15 @@
-# --- Core Libraries & Web Server ---
-Flask==2.3.2
-gunicorn==20.1.0
+Flask==2.3.3
+gunicorn==21.2.0
 requests==2.31.0
 python-dotenv==1.0.0
-
-# --- LangChain & Google AI (Versiones Compatibles) ---
-langchain==0.1.13
-langchain-community==0.0.29
-langchain-core==0.1.33
-langchain-google-genai==0.0.9
-
-# --- Database & Memory (Versiones Compatibles) ---
-SQLAlchemy==2.0.25
 psycopg2-binary==2.9.9
-
-# --- Herramientas Adicionales ---
-tavily-python==0.3.0
+SQLAlchemy==2.0.25
+google-generativeai==0.3.2
+google-api-python-client==2.110.0
+google-auth-httplib2==0.1.1
+google-auth-oauthlib==1.1.0
 gspread==5.12.4
-oauth2client==4.1.3
-chromadb==0.4.22
-pypdf==4.0.1
-langchain-experimental==0.0.49
+langchain==0.1.13
+langchain-google-genai==0.0.9
+tavily-python==0.3.0
+langchain-postgres==0.0.3
