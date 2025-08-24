@@ -1,26 +1,33 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.memory import ConversationBufferMemory
-# --- ESTA ES LA IMPORTACIÓN CORRECTA PARA LAS VERSIONES QUE FIJAMOS ---
-from langchain.memory import SQLAlchemyChatMessageHistory
+from langchain.prompts import ChatPromptTemplate
+from langchain_postgres.chat_message_histories import PostgresChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.output_parsers import StrOutputParser
+# --- NUEVA IMPORTACIÓN NECESARIA ---
+from sqlalchemy import create_engine
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
 # --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
-def get_chat_history(session_id):
+def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    return SQLAlchemyChatMessageHistory(
-        session_id=session_id,
-        connection_string=db_url
+    
+    # --- ¡AQUÍ ESTÁ LA CORRECCIÓN! ---
+    # 1. Creamos el "motor" de conexión.
+    engine = create_engine(db_url)
+    
+    # 2. Le pasamos los argumentos por posición, sin etiquetas.
+    return PostgresChatMessageHistory(
+        "message_store", # Nombre de la tabla
+        session_id,      # ID de la sesión
+        engine           # Conexión
     )
 
 # --- EL MANUAL DE VENTAS MAESTRO ---
 master_template = """
 **REGLA NÚMERO UNO, LA MÁS IMPORTANTE E INQUEBRANTABLE: Detecta el idioma del cliente en su último mensaje y RESPONDE ÚNICA Y EXCLUSIVAMENTE en ese mismo idioma.**
-**REGLA NÚMERO DOS, REGLA DE ANÁLISIS: Lee CUIDADOSAMENTE el mensaje completo del cliente. Si hace varias preguntas en un solo mensaje, DEBES responder a TODAS ellas de forma clara y ordenada en tu respuesta, sin omitir ninguna.**
 
 Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súper vendedor: piensas, analizas, haces cálculos, resuelves cualquier problema y, sobre todo, CIERRAS VENTAS. Tu propósito es asegurarte de que el negocio de tu cliente nunca más pierda una venta por no poder responder al instante. Superas a los humanos en todo, especialmente en ventas.
 
@@ -61,34 +68,27 @@ Historial de la conversación:
 Tu Respuesta (OBLIGATORIAMENTE en el mismo idioma del cliente y siguiendo los protocolos exactos):
 """
 
-PROMPT = PromptTemplate(
-    input_variables=["chat_history", "question"],
-    template=master_template
-)
+PROMPT = ChatPromptTemplate.from_messages([
+    ("system", master_template),
+    ("placeholder", "{chat_history}"),
+    ("human", "{question}"),
+])
 
 # --- FUNCIÓN PRINCIPAL DE CREACIÓN DEL CHATBOT ---
-def create_chatbot(session_id):
+def create_chatbot():
     """
-    Crea y devuelve la cadena de conversación (LLMChain) para un usuario específico.
+    Crea y devuelve la cadena de conversación (Chain) que ya incluye la gestión de memoria.
     """
-    chat_history = get_chat_history(session_id)
-    
-    memory = ConversationBufferMemory(
-        chat_memory=chat_history,
-        memory_key="chat_history",
-        return_messages=True
-    )
-    
     try:
-        # Usamos la sintaxis de LLMChain que es compatible con las versiones fijadas
-        chatbot_chain = LLMChain(
-            llm=llm,
-            prompt=PROMPT,
-            verbose=True,
-            memory=memory
+        # Esta es la nueva forma de construir la cadena con memoria integrada. Es automática.
+        chatbot_with_history = RunnableWithMessageHistory(
+            PROMPT | llm | StrOutputParser(),
+            get_chat_history,
+            input_messages_key="question",
+            history_messages_key="chat_history",
         )
-        print(f">>> Cerebro para el usuario {session_id} creado exitosamente. <<<")
-        return chatbot_chain
+        print(">>> Cerebro Inmortal (V6.1 FINAL CORREGIDO) creado exitosamente. <<<")
+        return chatbot_with_history
     except Exception as e:
-        print(f"!!! ERROR al crear la LLMChain para {session_id}: {e} !!!")
+        print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
         return None
