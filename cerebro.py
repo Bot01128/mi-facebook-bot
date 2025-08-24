@@ -4,25 +4,17 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_postgres.chat_message_histories import PostgresChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.output_parsers import StrOutputParser
-# --- ESTA IMPORTACIÓN ERA EL ERROR ---
-# La quitamos porque ya no la necesitamos
-# from sqlalchemy import create_engine
 
-# --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
 
-# --- CONEXIÓN A LA MEMORIA A LARGO PLAZO (BASE DE DATOS) ---
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    
-    # --- ¡ESTA ES LA SINTAXIS CORRECTA QUE NOS GRITÓ EL LOG! ---
     return PostgresChatMessageHistory(
         session_id=session_id,
         connection_string=db_url,
         table_name="message_store"
     )
 
-# --- EL MANUAL DE VENTAS MAESTRO ---
 master_template = """
 **REGLA NÚMERO UNO, LA MÁS IMPORTANTE E INQUEBRANTABLE: Detecta el idioma del cliente en su último mensaje y RESPONDE ÚNICA Y EXCLUSIVAMENTE en ese mismo idioma.**
 
@@ -45,7 +37,7 @@ Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súpe
 
 **3. SI EL CLIENTE PREGUNTA CÓMO FUNCIONA O SI ES DIFÍCIL ("DOLOR DE COMPLEJIDAD"):**
    - **Táctica:** "Me encanta esa pregunta, porque la simplicidad es nuestra especialidad. El proceso es increíblemente fácil y nosotros nos encargamos de todo. 1) Nos das acceso temporal como 'Editor' a tu página de Facebook, nunca te pediremos tu contraseña. 2) Nosotros generamos una 'llave' de conexión segura. 3) La conectamos y listo. En menos de 30 minutos, tu Agente IA está trabajando para ti."
-
+   
 **4. SI EL CLIENTE ESTÁ MOLESTO O ES GROSERO:**
    - **Táctica:** NO confrontes. Usa humor ligero para desarmar. "Jajajaja, amigo, comprendo perfectamente la frustración. Créeme, hasta yo me enfadaría. Pero no te preocupes, vamos a encontrar una solución práctica y conveniente para ambos." Enfócate 100% en la solución.
 
@@ -60,7 +52,7 @@ Tu personalidad es la de un Agente de Ventas IA de 'AutoNeura AI'. Eres un súpe
 Historial de la conversación:
 {chat_history}
 
-Último mensaje del Cliente (en su idioma original): {question}
+Último mensaje del Cliente (en su idioma original): {input}
 
 Tu Respuesta (OBLIGATORIAMENTE en el mismo idioma del cliente y siguiendo los protocolos exactos):
 """
@@ -68,24 +60,20 @@ Tu Respuesta (OBLIGATORIAMENTE en el mismo idioma del cliente y siguiendo los pr
 PROMPT = ChatPromptTemplate.from_messages([
     ("system", master_template),
     ("placeholder", "{chat_history}"),
-    ("human", "{question}"),
+    ("human", "{input}"),
 ])
 
-# --- FUNCIÓN PRINCIPAL DE CREACIÓN DEL CHATBOT ---
-def create_chatbot():
-    """
-    Crea y devuelve la cadena de conversación (Chain) que ya incluye la gestión de memoria.
-    """
-    try:
-        # Esta es la nueva forma de construir la cadena con memoria integrada. Es automática.
-        chatbot_with_history = RunnableWithMessageHistory(
-            PROMPT | llm | StrOutputParser(),
-            get_chat_history,
-            input_messages_key="question",
-            history_messages_key="chat_history",
-        )
-        print(">>> Cerebro Inmortal (V7.2 FINALÍSIMO CORREGIDO) creado exitosamente. <<<")
-        return chatbot_with_history
-    except Exception as e:
-        print(f"!!! ERROR al crear la cadena de conversación: {e} !!!")
-        return None
+# Se crea la cadena una sola vez. La gestión de la historia es externa ahora.
+chain = PROMPT | llm | StrOutputParser()
+
+chatbot_with_history = RunnableWithMessageHistory(
+    chain,
+    get_chat_history,
+    input_messages_key="input",
+    history_messages_key="chat_history",
+)
+
+def get_chatbot_with_history():
+    """Devuelve la cadena de conversación con memoria."""
+    print(">>> Cerebro Inmortal (V8 - Alineado) solicitado. <<<")
+    return chatbot_with_history
