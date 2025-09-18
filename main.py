@@ -7,7 +7,7 @@ from cerebro import create_chatbot
 # --- CONFIGURACIÓN INICIAL ---
 load_dotenv()
 app = Flask(__name__)
-
+print(">>> LA APLICACIÓN FLASK SE HA INICIADO CORRECTAMENTE <<<")
 VERIFY_TOKEN = os.environ.get('VERIFY_TOKEN')
 PAGE_ACCESS_TOKEN = os.environ.get('PAGE_ACCESS_TOKEN')
 
