@@ -5,11 +5,12 @@ Flask==3.0.3
 requests==2.32.3
 twilio==9.2.1
 
-# --- LangChain & Google AI (Versiones Compatibles) ---
-langchain==0.2.1
-langchain-google-genai==1.0.5
-langchain-core==0.2.2
-langchain-postgres==0.0.4
+# --- LangChain & Google AI (Sin versiones fijas) ---
+langchain
+langchain-google-genai
+langchain-core
+langchain-postgres
+langchain-text-splitters
 
 # --- Herramientas Adicionales ---
 gspread==6.0.2
