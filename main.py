@@ -1,62 +1,65 @@
 import os
-import requests
 from flask import Flask, request
 from dotenv import load_dotenv
+from twilio.rest import Client
 from cerebro import create_chatbot
-from twilio.rest import Client  # Importamos la librería de Twilio
 
-# --- CONFIGURACIÓN INICIAL ---
+print(">>> [main.py] Cargando Módulo...")
 load_dotenv()
 app = Flask(__name__)
+print(">>> [main.py] Aplicación Flask creada.")
 
-# Leemos las credenciales de Twilio de las variables de entorno
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-# Este es el Page ID de tu página de Facebook, que actúa como el "número" remitente de Twilio
-TWILIO_FACEBOOK_SENDER_ID = os.environ.get('TWILIO_FACEBOOK_SENDER_ID')
+# --- CONFIGURACIÓN DE TWILIO ---
+try:
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+    TWILIO_FACEBOOK_SENDER_ID = os.environ.get('TWILIO_FACEBOOK_SENDER_ID')
+    twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    print(">>> [main.py] Cliente de Twilio inicializado.")
+except Exception as e:
+    print(f"!!! ERROR [main.py]: Faltan las credenciales de Twilio o son incorrectas: {e} !!!")
+    twilio_client = None
 
-# Inicializamos el cliente de Twilio una sola vez
-twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+# --- INICIALIZACIÓN DEL CEREBRO ---
+# Creamos el cerebro una sola vez para que sea más eficiente.
+final_chain = create_chatbot()
 
-# --- RUTA PRINCIPAL ---
+# --- RUTA PRINCIPAL (PARA VERIFICAR QUE ESTÁ VIVO) ---
 @app.route('/')
 def home():
-    return "<h1>El servidor del Chatbot (versión Twilio) está funcionando</h1>", 200
+    return "<h1>Servidor AutoNeura AI (versión Twilio) está VIVO</h1>", 200
 
 # --- RUTA WEBHOOK PARA TWILIO ---
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    # Twilio envía los datos de forma diferente a Facebook (en un formulario, no en JSON)
+    if not twilio_client or not final_chain:
+        print("!!! ERROR CRÍTICO [main.py]: El bot no está configurado correctamente. Ignorando mensaje.")
+        return "OK", 200
+
     incoming_data = request.values
     print(f"--- Datos recibidos de Twilio: {incoming_data} ---")
 
     sender_id = incoming_data.get('From')
     message_text = incoming_data.get('Body')
     
-    # Twilio añade el prefijo "messenger:" al ID del remitente. Lo quitamos.
     if sender_id and sender_id.startswith('messenger:'):
         sender_id = sender_id.replace('messenger:', '')
 
     if sender_id and message_text:
         print(f"--- Mensaje procesado de {sender_id}: '{message_text}' ---")
-
-        # El cerebro sigue siendo el mismo, no cambia nada aquí
-        final_chain = create_chatbot(session_id=sender_id)
-
-        if final_chain is None:
-            print(f"!!! ERROR: No se pudo crear el cerebro para {sender_id}.")
-            return "OK", 200
-
         try:
-            response_text = final_chain.invoke({"question": message_text})
-            print(f"--- Respuesta generada por la IA: '{response_text}' ---")
+            # Invocamos la cadena con el nuevo estándar, pasando el session_id en la configuración
+            response_object = final_chain.invoke(
+                {"input": message_text},
+                config={"configurable": {"session_id": sender_id}}
+            )
+            response_text = response_object.content
             
-            # Usamos la nueva función para enviar la respuesta a través de Twilio
+            print(f"--- Respuesta generada por la IA: '{response_text}' ---")
             send_message_via_twilio(sender_id, response_text)
             print(f"--- Respuesta enviada a {sender_id} vía Twilio ---")
-        
         except Exception as e:
-            print(f"!!! ERROR AL PROCESAR EL MENSAJE: {e} !!!")
+            print(f"!!! ERROR [main.py] AL PROCESAR EL MENSAJE: {e} !!!")
     
     return "OK", 200
 
@@ -70,4 +73,6 @@ def send_message_via_twilio(recipient_id, message_text):
         )
         print(f"Mensaje enviado con SID: {message.sid}")
     except Exception as e:
-        print(f"!!! ERROR al enviar mensaje con Twilio: {e} !!!")
+        print(f"!!! ERROR [main.py] al enviar mensaje con Twilio: {e} !!!")
+
+print(">>> [main.py] Módulo cargado completamente.")
