@@ -1,77 +1,34 @@
-import os
-import requests
-from flask import Flask, request
-from dotenv import load_dotenv
-from cerebro import create_chatbot
-
-# --- CONFIGURACIÓN INICIAL ---
-load_dotenv()
-app = Flask(__name__)
-print(">>> LA APLICACIÓN FLASK SE HA INICIADO CORRECTAMENTE <<<")
-VERIFY_TOKEN = os.environ.get('VERIFY_TOKEN')
-PAGE_ACCESS_TOKEN = os.environ.get('PAGE_ACCESS_TOKEN')
-
-# --- RUTA PRINCIPAL ---
-@app.route('/')
-def home():
-    return "<h1>El servidor del Chatbot está funcionando</h1><p>¡Listo para conectar con Facebook!</p>", 200
-
-# --- RUTA WEBHOOK ---
-@app.route('/webhook', methods=['GET', 'POST'])
+@app.route('/webhook', methods=['POST'])
 def webhook():
-    if request.method == 'GET':
-        token_sent = request.args.get("hub.verify_token")
-        if token_sent == VERIFY_TOKEN:
-            challenge = request.args.get("hub.challenge")
-            return challenge, 200
-        return 'Token de verificación inválido', 403
+    # Twilio envía los datos de forma diferente a Facebook
+    incoming_data = request.values
+    print(f"--- Datos recibidos de Twilio: {incoming_data} ---")
 
-    elif request.method == 'POST':
-        data = request.get_json()
-        if data and data.get("object") == "page":
-            for entry in data.get("entry", []):
-                for messaging_event in entry.get("messaging", []):
-                    if messaging_event.get("message") and "text" in messaging_event["message"]:
-                        sender_id = messaging_event["sender"]["id"]
-                        message_text = messaging_event["message"]["text"]
-                        
-                        # Creamos o recuperamos un cerebro específico para este usuario (sender_id)
-                        final_chain = create_chatbot(session_id=sender_id)
+    sender_id = incoming_data.get('From')
+    message_text = incoming_data.get('Body')
+    
+    # Quitamos el prefijo "messenger:" que añade Twilio al sender_id
+    if sender_id and sender_id.startswith('messenger:'):
+        sender_id = sender_id.replace('messenger:', '')
 
-                        if final_chain is None:
-                            print(f"!!! ERROR: No se pudo crear el cerebro para {sender_id}. No se puede procesar el mensaje.")
-                            continue # Pasamos al siguiente mensaje
+    if sender_id and message_text:
+        print(f"--- Mensaje procesado de {sender_id}: '{message_text}' ---")
 
-                        print(f"--- Mensaje recibido de {sender_id}: '{message_text}' ---")
+        final_chain = create_chatbot(session_id=sender_id)
 
-                        try:
-                            # Invocamos la cadena con el nuevo estándar
-                            response_text = final_chain.invoke({"question": message_text})
-                            
-                            # YA NO ES NECESARIO GUARDAR LA MEMORIA MANUALMENTE
-                            # El nuevo sistema lo hace automáticamente.
-                            
-                            print(f"--- Respuesta generada: {response_text} ---")
-                            send_message(sender_id, response_text)
-                            print(f"--- Respuesta enviada a {sender_id} ---")
-                        
-                        except Exception as e:
-                            print(f"!!! ERROR AL PROCESAR EL MENSAJE: {e} !!!")
-                            send_message(sender_id, "Lo siento, estoy teniendo problemas técnicos. Por favor, inténtalo de nuevo más tarde.")
+        if final_chain is None:
+            print(f"!!! ERROR: No se pudo crear el cerebro para {sender_id}.")
+            return "OK", 200
 
-        return "OK", 200
-
-# --- FUNCIÓN PARA ENVIAR MENSAJES ---
-def send_message(recipient_id, message_text):
-    params = {"access_token": PAGE_ACCESS_TOKEN}
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "recipient": {"id": recipient_id},
-        "message": {"text": message_text}
-    }
-    try:
-        r = requests.post("https://graph.facebook.com/v19.0/me/messages", params=params, headers=headers, json=data, timeout=10)
-        if r.status_code != 200:
-            print(f"!!! ERROR al enviar mensaje a Facebook API: {r.status_code} {r.text} !!!")
-    except requests.exceptions.RequestException as e:
-        print(f"!!! ERROR de conexión al enviar mensaje: {e} !!!")
+        try:
+            response_text = final_chain.invoke({"question": message_text})
+            print(f"--- Respuesta generada por la IA: {response_text} ---")
+            
+            # Ahora enviamos la respuesta usando la librería de Twilio
+            send_message_via_twilio(sender_id, response_text)
+            print(f"--- Respuesta enviada a {sender_id} vía Twilio ---")
+        
+        except Exception as e:
+            print(f"!!! ERROR AL PROCESAR EL MENSAJE: {e} !!!")
+    
+    return "OK", 200
