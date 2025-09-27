@@ -5,9 +5,10 @@ Flask==3.0.3
 requests==2.32.3
 twilio==9.2.1
 
-# --- LangChain & Google AI ---
-langchain==0.1.20
+# --- LangChain & Google AI (Versiones Compatibles) ---
+langchain==0.2.1
 langchain-google-genai==1.0.5
+langchain-core==0.2.2
 langchain-postgres==0.0.4
 
 # --- Herramientas Adicionales ---
@@ -17,6 +18,4 @@ tavily-python==0.3.3
 
 # --- Database Connection ---
 SQLAlchemy==2.0.30
-#psycopg2-binary==2.9.9
-
-
+psycopg2-binary==2.9.9
