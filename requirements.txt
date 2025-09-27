@@ -18,3 +18,4 @@ tavily-python==0.3.3
 # --- Database Connection ---
 SQLAlchemy==2.0.30
 psycopg2-binary==2.9.9
+
