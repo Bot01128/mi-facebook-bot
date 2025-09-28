@@ -17,15 +17,16 @@ except Exception as e:
 # --- CONEXIÓN A LA MEMORIA (BASE DE DATOS) ---
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    # Esta es la sintaxis correcta que habíamos descubierto
+    # --- ¡ESTA ES LA SINTAXIS CORREGIDA Y A PRUEBA DE BALAS! ---
+    # Le pasamos los argumentos con su nombre para evitar errores de posición.
     return PostgresChatMessageHistory(
-        session_id,
-        db_url,
-        "message_store"
+        connection_string=db_url,
+        session_id=session_id,
+        table_name="message_store"
     )
 
 # --- EL MANUAL DE VENTAS MAESTRO (PROMPT) ---
-# He puesto un prompt de ejemplo. Asegúrate de pegar tu prompt completo aquí.
+# Asegúrate de que tu prompt completo esté aquí adentro.
 PROMPT = ChatPromptTemplate.from_messages([
     ("system", """
 **REGLA NÚMERO UNO, LA MÁS IMPORTANTE E INQUEBRANTABLE: Detecta el idioma del cliente en su último mensaje y RESPONDE ÚNICA Y EXCLUSIVAMENTE en ese mismo idioma.**
@@ -56,7 +57,7 @@ def create_chatbot():
             input_messages_key="input",
             history_messages_key="chat_history",
         )
-        print(">>> [cerebro.py] Cerebro Inmortal (v13 - Sintaxis Corregida) creado exitosamente.")
+        print(">>> [cerebro.py] Cerebro Inmortal (v14 - CORRECCIÓN FINAL) creado exitosamente.")
         return chatbot_with_history
     except Exception as e:
         print(f"!!! ERROR [cerebro.py] al crear la cadena de conversación: {e} !!!")
