@@ -4,7 +4,7 @@ from langchain_postgres.chat_message_histories import PostgresChatMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
 
-print(">>> [cerebro.py] Cargando Módulo...")
+print(">>> [cerebro.py] Cargando Módulo... VERSIÓN NUCLEAR") # <--- CAMBIO DE VERIFICACIÓN
 
 # --- INICIALIZACIÓN DEL MODELO DE LENGUAJE ---
 try:
@@ -17,8 +17,8 @@ except Exception as e:
 # --- CONEXIÓN A LA MEMORIA (BASE DE DATOS) ---
 def get_chat_history(session_id: str):
     db_url = os.environ.get("DATABASE_URL")
-    # --- ¡ESTA ES LA SINTAXIS CORREGIDA Y A PRUEBA DE BALAS! ---
-    # Le pasamos los argumentos con su nombre para evitar errores de posición.
+    # --- ESTA ES LA SINTAXIS CORRECTA A PRUEBA DE BALAS ---
+    # Le pasamos los argumentos con su nombre para evitar errores.
     return PostgresChatMessageHistory(
         connection_string=db_url,
         session_id=session_id,
@@ -57,10 +57,10 @@ def create_chatbot():
             input_messages_key="input",
             history_messages_key="chat_history",
         )
-        print(">>> [cerebro.py] Cerebro Inmortal (v14 - CORRECCIÓN FINAL) creado exitosamente.")
+        print(">>> [cerebro.py] Cerebro Inmortal (VERSIÓN NUCLEAR) creado exitosamente.") # <--- CAMBIO DE VERIFICACIÓN
         return chatbot_with_history
     except Exception as e:
         print(f"!!! ERROR [cerebro.py] al crear la cadena de conversación: {e} !!!")
         return None
 
-print(">>> [cerebro.py] Módulo cargado completamente.")
+print(">>> [cerebro.py] Módulo cargado completamente. VERSIÓN NUCLEAR") # <--- CAMBIO DE VERIFICACIÓN
