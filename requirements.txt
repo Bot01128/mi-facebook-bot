@@ -1,23 +1,17 @@
-# --- Core Libraries ---
+# --- Core & Web ---
 python-dotenv==1.0.1
 gunicorn==22.0.0
 Flask==3.0.3
 requests==2.32.3
 twilio==9.2.1
 
-# --- LangChain & Google AI (Sin versiones fijas) ---
-langchain
-langchain-google-genai
-langchain-core
-langchain-community
-langchain-text-splitters
+# --- LangChain Stack (Versiones Sincronizadas) ---
+langchain==0.2.1
+langchain-core==0.2.2
+langchain-google-genai==1.0.5
+langchain-postgres==0.0.4
+langchain-community==0.2.1
 
-# --- Herramientas Adicionales ---
-gspread==6.0.2
-oauth2client==4.1.3
-tavily-python==0.3.3
-
-# --- Database Connection ---
+# --- Database ---
 SQLAlchemy==2.0.30
 psycopg2-binary==2.9.9
-
