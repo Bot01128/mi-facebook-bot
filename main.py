@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from twilio.rest import Client
 from cerebro import create_chatbot
 
-print(">>> [main.py] Cargando Módulo... VERSIÓN NUCLEAR") # <--- CAMBIO 1
+print(">>> [main.py] Cargando Módulo... VERSIÓN NUCLEAR")
 load_dotenv()
 app = Flask(__name__)
 print(">>> [main.py] App Flask creada.")
@@ -26,7 +26,6 @@ final_chain = create_chatbot()
 # --- RUTA PRINCIPAL (PARA VERIFICAR QUE ESTÁ VIVO) ---
 @app.route('/')
 def home():
-    # --- CAMBIO 2 ---
     return "<h1>SERVIDOR VERSIÓN NUCLEAR - ¡FUNCIONA!</h1>", 200
 
 # --- RUTA WEBHOOK PARA TWILIO ---
@@ -44,7 +43,7 @@ def webhook():
         sender_id = sender_id.replace('messenger:', '')
 
     if sender_id and message_text:
-        print(f"--- [V-NUCLEAR] Mensaje de {sender_id}: '{message_text}' ---") # <--- CAMBIO 3
+        print(f"--- [V-NUCLEAR] Mensaje de {sender_id}: '{message_text}' ---")
         try:
             response_object = final_chain.invoke(
                 {"input": message_text},
@@ -71,4 +70,4 @@ def send_message_via_twilio(recipient_id, message_text):
     except Exception as e:
         print(f"!!! ERROR [V-NUCLEAR] al enviar con Twilio: {e} !!!")
 
-print(">>> [main.py] Módulo cargado. VERSIÓN NUCLEAR") # <--- CAMBIO 4
+print(">>> [main.py] Módulo cargado. VERSIÓN NUCLEAR")
