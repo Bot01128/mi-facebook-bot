@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF--8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoNeura AI - Dashboard</title>
+    <style>
+        /* Aquí irá el CSS (los estilos) para que se vea bien */
+        body, html { margin: 0; padding: 0; font-family: sans-serif; background-color: #f0f2f5; height: 100%; }
+        .container { display: flex; height: 100%; }
+        .left-panel { flex: 1; background-color: #e9ebee; padding: 20px; display: flex; flex-direction: column; }
+        .right-panel { flex: 2; background-color: #ffffff; padding: 40px; overflow-y: auto; }
+        h1, h2 { color: #1c1e21; }
+        .chat-window { flex-grow: 1; border: 1px solid #ccc; background: white; margin-top: 20px; display: flex; flex-direction: column; }
+        .chat-messages { flex-grow: 1; padding: 10px; overflow-y: auto; }
+        .chat-input { display: flex; border-top: 1px solid #ccc; }
+        .chat-input input { flex-grow: 1; border: none; padding: 10px; }
+        .chat-input button { border: none; background: #4267B2; color: white; padding: 10px 15px; cursor: pointer; }
+        .form-section { margin-bottom: 30px; }
+        .form-section label { display: block; margin-bottom: 8px; font-weight: bold; }
+        .form-section input[type="text"], .form-section input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- === PANEL IZQUIERDO (ASISTENTE IA) === -->
+        <div class="left-panel">
+            <h2>Asistente AutoNeura</h2>
+            <div class="chat-window">
+                <div class="chat-messages">
+                    <p><strong>Asistente:</strong> ¡Hola! ¿En qué puedo ayudarte a configurar hoy?</p>
+                </div>
+                <div class="chat-input">
+                    <input type="text" placeholder="Escribe tu pregunta...">
+                    <button>Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- === PANEL DERECHO (FORMULARIO) === -->
+        <div class="right-panel">
+            <h1>Panel de Control</h1>
+            <h2>Crear Nueva Campaña</h2>
+
+            <div class="form-section">
+                <label for="campaign-name">Paso 1: Dale un Nombre a tu Campaña</label>
+                <input type="text" id="campaign-name" placeholder="Ej: Búsqueda de Spas en Medellín">
+            </div>
+
+            <div class="form-section">
+                <label>Paso 2: Elige tus Canales de Búsqueda</label>
+                <div>
+                    <input type="checkbox" id="google-maps" checked>
+                    <label for="google-maps">Google Maps</label>
+                </div>
+                <!-- Agregaremos más canales en el futuro -->
+            </div>
+
+            <div class="form-section">
+                <label>Paso 3: Define tus Criterios de Búsqueda</label>
+                <label for="business-type">¿Qué tipo de negocio buscas?</label>
+                <input type="text" id="business-type" placeholder="Ej: Spas">
+                <label for="location" style="margin-top: 10px;">¿En qué ciudad y país?</label>
+                <input type="text" id="location" placeholder="Ej: Medellín, Colombia">
+            </div>
+        </div>
+    </div>
+</body>
+</html>
