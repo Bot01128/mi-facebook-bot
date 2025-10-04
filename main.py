@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, render_template  # <--- CAMBIO 1: Añadido render_template
 from dotenv import load_dotenv
 from twilio.rest import Client
 from cerebro import create_chatbot
@@ -26,7 +26,8 @@ final_chain = create_chatbot()
 # --- RUTA PRINCIPAL (PARA VERIFICAR QUE ESTÁ VIVO) ---
 @app.route('/')
 def home():
-    return "<h1>SERVIDOR VERSIÓN NUCLEAR - ¡FUNCIONA!</h1>", 200
+    # --- CAMBIO 2: Ahora muestra nuestro Dashboard ---
+    return render_template('dashboard.html')
 
 # --- RUTA WEBHOOK PARA TWILIO ---
 @app.route('/webhook', methods=['POST'])
