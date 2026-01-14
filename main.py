@@ -3,21 +3,19 @@ import requests
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 # from twilio.rest import Client  <-- YA NO USAMOS TWILIO
-from cerebro import create_chatbot # <-- ESTO ES TU CEREBRO, LO DEJAMOS QUIETO
+from cerebro import create_chatbot # <-- TU CEREBRO IA SE QUEDA INTACTO
 
 print(">>> [main.py] Cargando Módulo... VERSIÓN JIREH-META (CEREBRO ACTIVO)")
 load_dotenv()
 app = Flask(__name__)
 
 # --- CONFIGURACIÓN DE JIREH C.A. (META DIRECTO) ---
-# PEGA AQUÍ EL TOKEN LARGO QUE GUARDASTE (EAAdYe...):
-WHATSAPP_TOKEN = "PEGA_TU_TOKEN_LARGO_AQUI"
-
-# TUS IDENTIFICADORES (Ya están puestos):
+# YA PUSE TU TOKEN Y TU ID EXACTOS AQUÍ:
+WHATSAPP_TOKEN = "EAAdYecltdMUBQe0OWslx4kCTVr5OZCV3o48DIeVrODgYm9z4mQRsOj7cy8hZCzIA38TKEB6LRmpBs5vKCJTjoVZCu8j7BAcWkB6JlJdSZA9b6iVZCfBsV3tZBn0vWXsZCPBvKLXS1B8ZCzG14UsmmgES6ZCLjg9KZC2Cm4L3oSwUZBG9iDVQyxZAisBmNP6nRD9P3AZCCODQTPsHdeFCQ373aziZBDWf1dSfF2rfkyJs9E9xFT6JMZC3atvat9C4yzVFkIdfkAhbyu7dVdN4OAZAIpGV9ZCZAUBwZDZD"
 PHONE_NUMBER_ID = "990084764187764" 
-VERIFY_TOKEN = "HOLA_JIREH"  # Contraseña para verificar con Facebook
+VERIFY_TOKEN = "HOLA_JIREH"  # Esta es la contraseña para conectar con Facebook
 
-# --- INICIALIZACIÓN DEL CEREBRO (INTACTO) ---
+# --- INICIALIZACIÓN DEL CEREBRO ---
 try:
     final_chain = create_chatbot()
     print(">>> [main.py] CEREBRO IA CARGADO EXITOSAMENTE 🧠")
@@ -33,6 +31,7 @@ def home():
 # --- VERIFICACIÓN DEL WEBHOOK (OBLIGATORIO PARA FACEBOOK) ---
 @app.route('/webhook', methods=['GET'])
 def verify_webhook():
+    """Facebook llama aquí para verificar que el servidor es tuyo"""
     mode = request.args.get("hub.mode")
     token = request.args.get("hub.verify_token")
     challenge = request.args.get("hub.challenge")
@@ -53,7 +52,7 @@ def webhook():
     
     try:
         if body.get("object"):
-            # Verificar si hay un mensaje válido dentro de la estructura compleja de Meta
+            # Verificar si es un mensaje de WhatsApp válido
             if (
                 body.get("entry")
                 and body["entry"][0].get("changes")
@@ -70,7 +69,7 @@ def webhook():
                     user_message = message["text"]["body"]
                     print(f"--- [JIREH] Mensaje de {phone_number}: '{user_message}' ---")
 
-                    # 3. LLAMAR A TU CEREBRO (Aquí está tu código original)
+                    # 3. LLAMAR A TU CEREBRO
                     if final_chain:
                         try:
                             # Invocamos a tu IA igual que antes
@@ -83,12 +82,12 @@ def webhook():
                             
                             print(f"--- [JIREH] Respuesta IA: '{ai_response_text}' ---")
                             
-                            # 4. ENVIAR RESPUESTA VÍA META (Nueva función)
+                            # 4. ENVIAR RESPUESTA VÍA META
                             send_whatsapp_message(phone_number, ai_response_text)
                             
                         except Exception as e_ai:
                             print(f"!!! ERROR CEREBRO IA: {e_ai}")
-                            send_whatsapp_message(phone_number, "Lo siento, estoy reiniciando mis neuronas. Intenta de nuevo.")
+                            send_whatsapp_message(phone_number, "Estoy procesando mucha información, dame un segundo...")
                     else:
                         print("!!! EL CEREBRO NO ESTÁ CARGADO !!!")
 
@@ -100,7 +99,7 @@ def webhook():
         print(f"Error procesando mensaje: {e}")
         return "Error", 500
 
-# --- NUEVA FUNCIÓN DE ENVÍO (META GRAPH API) ---
+# --- FUNCIÓN DE ENVÍO (META GRAPH API) ---
 def send_whatsapp_message(to_number, text_body):
     url = f"https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages"
     headers = {
